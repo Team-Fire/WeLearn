@@ -17,33 +17,27 @@ mongoose.connection.on('open', function () {
 
 var wechat = require('./routes/wechat');
 var studentLogin = require('./routes/student/login');
-
 var studentSchedule = require('./routes/student/schedule');
 var studentLesson = require('./routes/student/course');
 var studentMessage = require('./routes/student/message');
 var teacherMessage = require('./routes/teacher/message');
 var studentNotice = require('./routes/student/notice');
-var remindSettings = require('./routes/student/remindSettings');
 var teacherNotice = require('./routes/teacher/notice');
-
 var message = require('./routes/message');
 var getName = require('./routes/name');
 
 var app = express();
 app.listen(80);
 
-// view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
-// uncomment after placing your favicon in /public
-//app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(logger('dev'));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.query());
 app.use(session({
-  maxAge: 1800000,
+  maxAge: 18000000000,
   secret: 'keyboard cat',
   resave: false,
   saveUninitialized: true,
@@ -51,14 +45,59 @@ app.use(session({
   store: new MongoStore({ mongooseConnection: mongoose.connection })
 }));
 
-// var dataInsert = require('./data_insert');
+app.use(function (req, res, next) {
+  if (req.session.openid){
+    next();
+  }else{
+    var code = url.parse(req.url, true).query['code'];
+    if (code){
+      oauth.client.getAccessToken(code, function (err, result) {
+        req.session.openid = result.data.openid;
+        // console.log('---New Guest---');
+        // console.log(req.session.openid);
+        next();
+      });
+    }else{
+      req.session.openid = 'invalid';
+      next();
+    }
+  }
+});
+
+app.use('/wechat', wechat);
+app.use('/name', getName);
+app.use('/message', message);
+app.use('/student/login', studentLogin);
+app.use('/student/course', studentLesson);
+app.use('/student/schedule', studentSchedule);
+app.use('/student/message', studentMessage);
+app.use('/teacher/message', teacherMessage);
+app.use('/student/notice', studentNotice);
+app.use('/teacher/notice', teacherNotice);
+
+app.use(function(req, res, next) {
+  var err = new Error('Not Found');
+  err.status = 404;
+  next(err);
+});
+
+app.use(function(err, req, res, next) {
+  res.locals.message = err.message;
+  res.locals.error = req.app.get('env') === 'development' ? err : {};
+  res.status(err.status || 500);
+  res.render('error');
+});
+
+module.exports = app;
+
+// var dataInsert = require('./tools/data_insert');
 // dataInsert();
 
+// 数据库操作
 var Student = require('./Models/Student');
 var Course = require('./Models/Course');
 var Message = require('./Models/Message');
 var Notice = require('./Models/Notice');
-
 // Student.remove({}, function (err, doc) {});
 // Course.remove({}, function (err, doc) {});
 // Message.remove({}, function (err, doc) {});
@@ -82,67 +121,6 @@ var Notice = require('./Models/Notice');
 // });
 
 //设置 menu
-var menu_control = require('./handler/menu_control');
-menu_control.update_menu();
-
-app.use(function (req, res, next) {
-  if (req.session.openid){
-    next();
-  }else{
-    var code = url.parse(req.url, true).query['code'];
-    if (code){
-      oauth.client.getAccessToken(code, function (err, result) {
-        req.session.openid = result.data.openid;
-        console.log('---New Guest---');
-        console.log(req.session.openid);
-        next();
-      });
-    }else{
-      req.session.openid = 'invalid';
-      next();
-    }
-  }
-});
-/*
-app.use(function(req,res,next){
-  req.session.openid = "oBu1dv0TCi_9UEIHwqY4F0IbfX6E";
-  next();
-});
-*/
-
-app.use('/wechat', wechat);
-app.use('/name', getName);
-app.use('/message', message);
-
-app.use('/student/login', studentLogin);
-
-app.use('/student/course', studentLesson);
-app.use('/student/schedule', studentSchedule);
-
-app.use('/student/message', studentMessage);
-app.use('/teacher/message', teacherMessage);
-app.use('/student/notice', studentNotice);
-app.use('/student/remindSettings', remindSettings);
-app.use('/teacher/notice', teacherNotice);
-
-
-// catch 404 and forward to error handler
-app.use(function(req, res, next) {
-  var err = new Error('Not Found');
-  err.status = 404;
-  next(err);
-});
-
-// error handler
-app.use(function(err, req, res, next) {
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
-
-  // render the error page
-  res.status(err.status || 500);
-  res.render('error');
-});
-
-module.exports = app;
+// var menu_control = require('./handler/menu_control');
+// menu_control.update_menu();
 
