@@ -90,12 +90,6 @@ app.use(function(err, req, res, next) {
 
 module.exports = app;
 
-
-
-
-
-
-
 // var dataInsert = require('./tools/data_insert');
 // dataInsert();
 
@@ -104,10 +98,12 @@ var Student = require('./Models/Student');
 var Course = require('./Models/Course');
 var Message = require('./Models/Message');
 var Notice = require('./Models/Notice');
+
 Student.remove({}, function (err, doc) {});
 Course.remove({}, function (err, doc) {});
 Message.remove({}, function (err, doc) {});
 Notice.remove({}, function (err, doc) {});
+
 
 // Student.find({}, function (err, doc) {
 //   console.log('---Student---');

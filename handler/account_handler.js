@@ -26,6 +26,7 @@ exports.checkBindAccount = function (msg) {
 };
 
 exports.handleBindAccount = function (req, res) {
+
   Student.findOne({openid: req.weixin.FromUserName}, function (err, student) {
     if(student){
       res.reply("已经绑定成功!");

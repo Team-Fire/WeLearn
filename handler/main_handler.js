@@ -17,7 +17,7 @@ var pattern = [
   [accountHandler.checkUnbindAccount,         accountHandler.handleUnBindAccount],
   [lessonHandler.checkListLesson,             lessonHandler.handleListLesson],
   [scheduleHandler.checkListSchedule,         scheduleHandler.handleListSchedule],
-  [librarySeatHandler.checkListLibrarySeat,  librarySeatHandler.handleListLibrarySeat],
+  [librarySeatHandler.checkListLibrarySeat,   librarySeatHandler.handleListLibrarySeat],
   [messageHandler.checkSendMessage,           messageHandler.handleSendMessage],
   [messageHandler.checkSendNotice,            messageHandler.handleSendNotice],
   [checkEmpty,                                handleEmpty]
