@@ -12,55 +12,58 @@ var getDay = require('./getTotalDay');
 var startTime = getDay.getTotalDay(2016, 9, 12);
 
 router.get('/', urlencodedParser, function (req, res, next) {
-    Student.findOne({openid: req.session.openid}, function (err, doc) {
-        if (err) {
-            next(err);
-            return;
-        }
+  Student.findOne({openid: req.session.openid}, function (err, doc) {
+    if (err) {
+      next(err);
+      return;
+    }
 
-        var time = sd.format(new Date(), 'YYYY-MM-DD');
-        time = time.split(/-/);
-        var totalTime = 0;
-        var year = parseInt(time[0]);
-        for(var i = 0; i < year - 2016; i++){
-            totalTime += getDay.getTotalDay(2016 + i, 12, 31);
-        }
-        totalTime += getDay.getTotalDay(year, parseInt(time[1]), parseInt(time[2]));
-        var week = (parseInt((totalTime - startTime) / 7 + 1));
-        var day = ((totalTime - startTime) % 7 + 1);
-        //console.log(week);
-        //console.log(day);
+    var time = sd.format(new Date(), 'YYYY-MM-DD');
+    time = time.split(/-/);
+    var totalTime = 0;
+    var year = parseInt(time[0]);
+    for(var i = 0; i < year - 2016; i++){
+      totalTime += getDay.getTotalDay(2016 + i, 12, 31);
+    }
+    totalTime += getDay.getTotalDay(year, parseInt(time[1]), parseInt(time[2]));
+    var week = (parseInt((totalTime - startTime) / 7 + 1));
+    var day = ((totalTime - startTime) % 7 + 1);
 
-        var requestData = {
-            apikey: "camustest",
-            apisecret: "camustest"
-        };
+    var requestData = {
+      apikey: "camustest",
+      apisecret: "camustest"
+    };
 
-        var username = doc.studentnumber;
-        request({
-            method: 'POST',
-            url: 'http://se.zhuangty.com:8000/curriculum/' + username,
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(requestData)
-        }, function (error, response, body) {
-            if (response.statusCode === 200) {
-                var schedule = JSON.parse(body);
-                console.log(schedule);
-                res.render('student/schedule', {
-                    title: '今日课程',
-                    schedule: schedule,
-                    week:week,
-                    day:day
-                });
-            }
-            else {
-                res.reply('error response.');
-            }
+    if(!doc){
+      res.render('student/schedule', {
+        title: '今日课程',
+        schedule: {
+          classes: []
+        },
+        week:week,
+        day:day
+      });
+    }
+    var username = doc.studentnumber;
+    request({
+      method: 'POST',
+      url: 'http://se.zhuangty.com:8000/curriculum/' + username,
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(requestData)
+    }, function (error, response, body) {
+      if (response.statusCode === 200) {
+        var schedule = JSON.parse(body);
+        res.render('student/schedule', {
+          title: '今日课程',
+          schedule: schedule,
+          week:week,
+          day:day
         });
-
+      }
     });
+  });
 });
 
 module.exports = router;

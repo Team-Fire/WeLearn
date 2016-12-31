@@ -35,7 +35,7 @@ var router = express.Router();
 var Student = require('../../Models/Student');
 var Course = require('../../Models/Course');
 var Notice = require('../../Models/Notice');
-var noticeMessage = require('../../handler/notice_message');
+var noticeMessage = require('../../tools/notice_message');
 //以下三行处理带文件表单的依赖
 var multer = require('multer');
 var path = require('path');

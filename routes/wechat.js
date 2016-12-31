@@ -1,5 +1,5 @@
 var settings = require('../setting');
-var wrapper = require('../wrapper');
+var wrapper = require('../tools/wrapper');
 var express = require('express');
 var router = express.Router();
 var wechat = require('wechat');

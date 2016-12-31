@@ -31,7 +31,7 @@
  *
  */
 
-var wrapper = require('../../wrapper');
+var wrapper = require('../../tools/wrapper');
 var express = require('express');
 var bodyParser = require('body-parser');
 var request = require('request');
@@ -39,6 +39,7 @@ var utf8 = require('utf8');
 var router = express.Router();
 var Student = require('../../Models/Student');
 var Course = require('../../Models/Course');
+var accountHandler = require('../../handler/account_handler');
 // create application/x-www-form-urlencoded parser
 var urlencodedParser = bodyParser.urlencoded({ extended: false });
 
@@ -61,55 +62,6 @@ router.get('/', function (req, res, next) {
     }
   });
 });
-
-function updateCourseDb(student) {
-  var requestData = { apiKey: "", apisecret: ""};
-  request({
-    method: 'POST',
-    url: 'http://se.zhuangty.com:8000/learnhelper/'+ student.studentnumber +'/courses',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify(requestData)
-  }, function (error, response, body) {
-    var courses = JSON.parse(body).courses;
-    var courseNames = [];
-    for (var i = 0; i < courses.length; i++){
-      courseNames.push(courses[i].coursename);
-      (function (i) {
-        Course.findOne({courseid: courses[i].courseid}, function (err, doc) {
-          if (err) console.log(err);
-          if (doc){
-            if (student.position === 'teacher'){
-              doc.teacher.push({name: student.realname, userid: student.openid});
-              doc.save();
-            }else{
-              doc.student.push({name: student.realname, userid: student.openid});
-              doc.save();
-            }
-          }else{
-            var course = {
-              courseid: courses[i].courseid, coursename: courses[i].coursename, teacher: [], student: [], message: []
-            };
-            if (student.position === 'teacher'){
-              course.teacher.push({name: student.realname, userid: student.openid});
-            }else{
-              course.student.push({name: student.realname, userid: student.openid});
-            }
-            var courseObj = new Course(course);
-            courseObj.save();
-          }
-        })
-      })(i);
-    }
-    Student.findOne({openid: student.openid}, function (err, student) {
-      if (err){
-        console.log(err);
-        return;
-      }
-      student.course = courseNames;
-      student.save();
-    })
-  });
-}
 
 router.post('/', urlencodedParser, function (req, res, next) {
   var requestData = {
@@ -143,22 +95,17 @@ router.post('/', urlencodedParser, function (req, res, next) {
         no_notice: [],
         no_hwk: []
       };
-      //TODO
-      //if (student.openid === 'o3HdVwWHa0uJNuNLQ7u_1Tf0VEng')
-      //  student.position = 'teacher';
-      //
       var studentObj = new Student(student);
       studentObj.save(function (err) {
         if (err){
           next(err);
           return;
         }
-        updateCourseDb(student);
+        accountHandler.updateCourseDb(student);
       });
-      // res.render('student/login', {
-      //   status: 'success's
-      // });
-      res.redirect(wrapper.urlLessonInfo());
+      res.render('student/login', {
+        status: 'success'
+      });
     } else {
       res.render('student/login', {
         status: 'failed'

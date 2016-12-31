@@ -28,7 +28,7 @@ var bodyParser = require('body-parser');
 var Student = require('../../Models/Student');
 var Course = require('../../Models/Course');
 var Message = require('../../Models/Message');
-var textMessage = require('../../handler/text_message');
+var textMessage = require('../../tools/text_message');
 var urlencodedParser = bodyParser.urlencoded({ extended: false });
 
 router.get('/:courseid/:studentOpenid', urlencodedParser, function (req, res, next) {
@@ -75,9 +75,9 @@ router.post('/', urlencodedParser, function (req, res, next) {
       return;
     }
     textMessage(message.student, message);
-    res.json({
-      status: 'msgSend'
-    });
+  });
+  res.json({
+    status: 'msgSend'
   });
 });
 

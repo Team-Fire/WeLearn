@@ -6,13 +6,14 @@ var mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
 var Student = require('../../Models/Student');
 var Course = require('../../Models/Course');
+var Message = require('../../Models/Message');
 var dbURI    = 'mongodb://localhost/welearndb_test';
 var clearDB  = require('mocha-mongoose')(dbURI);
 
 var path = require('path');
 var express = require('express');
 var session = require('express-session');
-var studentLogin = require('../student/login');
+var teacherMessage = require('../teacher/message');
 var app = express();
 app.set('views', path.join(__dirname, '../../views'));
 app.set('view engine', 'ejs');
@@ -21,7 +22,8 @@ app.use(function (req, res, next) {
   req.session.openid = '-1';
   next();
 });
-app.use('/student/login', studentLogin);
+
+app.use('/teacher/message', teacherMessage);
 app.use(function(err, req, res, next) {
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
@@ -29,23 +31,29 @@ app.use(function(err, req, res, next) {
   res.render('error');
 });
 
-describe('GET /student/login', function () {
+describe('GET /teacher/message/:courseid/:studentOpenid', function () {
   before(function () {
     muk(Student,  'findOne', function (query, callback) {
       if (query.openid === '1'){
         var result = {
-          course: ['course1', 'course2']
+          realname: 'zhx'
         };
         callback(undefined, result);
-      }else if (query.openid === '2'){
+      }else {
         callback(new Error(), undefined);
-      } else if (query.openid === '3'){
-        callback(undefined, undefined);
       }
-    })
+    });
+    muk(Message, 'find', function (query, callback) {
+      if (query.course === '1'){
+        var result = [];
+        callback(undefined, result);
+      }else{
+        callback(new Error(), undefined);
+      }
+    });
   });
 
-  it('should return login page', function (done) {
+  it('should return teacher messages', function (done) {
     var app1 = express();
     app1.set('views', path.join(__dirname, '../../views'));
     app1.set('view engine', 'ejs');
@@ -54,7 +62,7 @@ describe('GET /student/login', function () {
       req.session.openid = '1';
       next();
     });
-    app1.use('/student/login', studentLogin);
+    app1.use('/teacher/message', teacherMessage);
     app1.use(function(err, req, res, next) {
       res.locals.message = err.message;
       res.locals.error = req.app.get('env') === 'development' ? err : {};
@@ -62,11 +70,11 @@ describe('GET /student/login', function () {
       res.render('error');
     });
     supertest(app1)
-      .get('/student/login')
+      .get('/teacher/message/1/1')
       .expect('Content-Type', /json/)
       .expect(200)
       .end(function (err, res) {
-        res.text.should.be.startWith('<!DOCTYPE html>');
+        res.text.should.be.equal('{"messages":[],"student":"zhx","status":"messages"}');
         done();
       });
   });
@@ -79,7 +87,7 @@ describe('GET /student/login', function () {
       req.session.openid = '2';
       next();
     });
-    app2.use('/student/login', studentLogin);
+    app2.use('/teacher/message', teacherMessage);
     app2.use(function(err, req, res, next) {
       res.locals.message = err.message;
       res.locals.error = req.app.get('env') === 'development' ? err : {};
@@ -87,7 +95,7 @@ describe('GET /student/login', function () {
       res.render('error');
     });
     supertest(app2)
-      .get('/student/login')
+      .get('/teacher/message/1/0')
       .expect('Content-Type', /json/)
       .expect(200)
       .end(function (err, res) {
@@ -95,24 +103,32 @@ describe('GET /student/login', function () {
         done();
       });
   });
-  it('should return error page', function (done) {
-    var app3 = express();
-    app3.set('views', path.join(__dirname, '../../views'));
-    app3.set('view engine', 'ejs');
-    app3.use(session({ secret: 'keyboard cat', cookie: { secure: false }, resave: false, saveUninitialized: true}));
-    app3.use(function (req, res, next) {
-      req.session.openid = '3';
+
+  after(function () {
+    muk.restore();
+  });
+});
+
+describe('GET /teacher/message/:courseid/:studentOpenid', function () {
+  it('should return return a render teacher message page', function (done) {
+    var app1 = express();
+    app1.set('views', path.join(__dirname, '../../views'));
+    app1.set('view engine', 'ejs');
+    app1.use(session({ secret: 'keyboard cat', cookie: { secure: false }, resave: false, saveUninitialized: true}));
+    app1.use(function (req, res, next) {
+      req.session.studenid = '1';
+      req.session.course = '0';
       next();
     });
-    app3.use('/student/login', studentLogin);
-    app3.use(function(err, req, res, next) {
+    app1.use('/teacher/message', teacherMessage);
+    app1.use(function(err, req, res, next) {
       res.locals.message = err.message;
       res.locals.error = req.app.get('env') === 'development' ? err : {};
       res.status(err.status || 500);
       res.render('error');
     });
-    supertest(app3)
-      .get('/student/login')
+    supertest(app1)
+      .get('/teacher/message/')
       .expect('Content-Type', /json/)
       .expect(200)
       .end(function (err, res) {
@@ -120,35 +136,36 @@ describe('GET /student/login', function () {
         done();
       });
   });
-
-  after(function () {
-    muk.restore();
-  })
 });
 
-describe('POST /student/login', function (done) {
-  it('should return json with fail msg', function (done) {
-    supertest(app)
-      .post('/student/login')
+describe('POST /teacher/message', function (done) {
+
+  it('should return json with send message', function (done) {
+    var app1 = express();
+    app1.set('views', path.join(__dirname, '../../views'));
+    app1.set('view engine', 'ejs');
+    app1.use(session({ secret: 'keyboard cat', cookie: { secure: false }, resave: false, saveUninitialized: true}));
+    app1.use(function (req, res, next) {
+      req.session.openid = '1';
+      next();
+    });
+    app1.use('/teacher/message', teacherMessage);
+    app1.use(function(err, req, res, next) {
+      res.locals.message = err.message;
+      res.locals.error = req.app.get('env') === 'development' ? err : {};
+      res.status(err.status || 500);
+      res.render('error');
+    });
+    supertest(app1)
+      .post('/teacher/message')
       .set('Content-Type', 'application/x-www-form-urlencoded')
-      .send({studentId: '2014011909', password:'invalid'})
+      .send({student: '2014011909', course:'invalid', msgBody: 'balabala'})
       .expect('Content-Type', /json/)
       .expect(200)
       .end(function (err, res) {
-        res.text.should.be.startWith('<!DOCTYPE html>');
+        res.text.should.be.equal('{"status":"msgSend"}');
         done();
       });
   });
-  it('should return json with success msg', function (done) {
-    supertest(app)
-      .post('/student/login')
-      .set('Content-Type', 'application/x-www-form-urlencoded')
-      .send({studentId: '2014011909', password:'invalid'})
-      .expect('Content-Type', /json/)
-      .expect(200)
-      .end(function (err, res) {
-        res.text.should.be.startWith('<!DOCTYPE html>');
-        done();
-      });
-  });
+
 });

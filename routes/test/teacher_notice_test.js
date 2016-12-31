@@ -1,6 +1,6 @@
 var muk = require('muk');
 var request = require("supertest");
-should = require('should');
+var should = require('should');
 
 var mongoose = require('mongoose');
 mongoose.Promise = global.Promise;

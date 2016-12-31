@@ -27,7 +27,7 @@ var message = require('./routes/message');
 var getName = require('./routes/name');
 
 var app = express();
-app.listen(80);
+// app.listen(80);
 
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
@@ -98,10 +98,12 @@ var Student = require('./Models/Student');
 var Course = require('./Models/Course');
 var Message = require('./Models/Message');
 var Notice = require('./Models/Notice');
-// Student.remove({}, function (err, doc) {});
-// Course.remove({}, function (err, doc) {});
-// Message.remove({}, function (err, doc) {});
-// Notice.remove({}, function (err, doc) {});
+
+Student.remove({}, function (err, doc) {});
+Course.remove({}, function (err, doc) {});
+Message.remove({}, function (err, doc) {});
+Notice.remove({}, function (err, doc) {});
+
 
 // Student.find({}, function (err, doc) {
 //   console.log('---Student---');

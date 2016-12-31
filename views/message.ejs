@@ -51,8 +51,8 @@
     });
 
     socket.on('msg', function(user, msg){
-        console.log(user);
-        console.log(msg);
+//        console.log(user);
+//        console.log(msg);
         $('#msgBody').before('<p>'+msg+'</p>');
         $('#msgBox').scrollTop($('#msgBox')[0].scrollHeight);
     });

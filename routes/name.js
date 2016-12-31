@@ -21,7 +21,7 @@ var express = require('express');
 var router = express.Router();
 var bodyParser = require('body-parser');
 var Student = require('../Models/Student');
-var Student = require('../Models/Course');
+var Course = require('../Models/Course');
 var setting = require('../setting');
 var urlencodedParser = bodyParser.urlencoded({ extended: false });
 

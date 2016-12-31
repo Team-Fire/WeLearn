@@ -1,12 +1,10 @@
 var muk = require('muk');
 var supertest = require("supertest");
 should = require('should');
-
 var mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
 var Student = require('../../Models/Student');
 var Course = require('../../Models/Course');
-
 var path = require('path');
 var express = require('express');
 var session = require('express-session');
@@ -132,7 +130,7 @@ describe('GET /student/notice', function () {
             });
     });
 
-    it('should return course page', function (done) {
+    it('should return notice page', function (done) {
         var app1 = express();
         app1.set('views', path.join(__dirname, '../../views'));
         app1.set('view engine', 'ejs');
@@ -200,7 +198,7 @@ describe('GET /student/documents', function () {
             });
     });
 
-    it('should return course page', function (done) {
+    it('should return document page', function (done) {
         var app1 = express();
         app1.set('views', path.join(__dirname, '../../views'));
         app1.set('view engine', 'ejs');
@@ -268,7 +266,7 @@ describe('GET /student/assignments', function () {
             });
     });
 
-    it('should return course page', function (done) {
+    it('should return document page', function (done) {
         var app1 = express();
         app1.set('views', path.join(__dirname, '../../views'));
         app1.set('view engine', 'ejs');
